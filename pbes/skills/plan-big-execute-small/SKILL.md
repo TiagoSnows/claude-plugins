@@ -73,6 +73,7 @@ Workers carry the `Skill` tool — you can tune a worker for its sub-task by nam
 - **Name the skill in the brief** — the worker won't guess. "Load `tdd` and implement X test-first."
 - **Match skill to role** — worker-loadable skills must NOT spawn their own agents (nesting is blocked). Skills that fan out (`research`, `deep-research`, `code-review`) you run yourself, not inside a worker.
 - **Mind tool-dependent skills** — some need a system tool present to run; if it's absent the skill degrades to guidance and the worker should say so.
+- **Missing skill → warn the user, don't silently skip.** If a skill that would have helped isn't installed on this machine, surface an explicit warning (which skill, what it would have improved, the install command) the moment you notice — then proceed with the worker's own judgment. Never install autonomously. Full protocol in `references/skill-arsenal.md`.
 - Full role→skill map: **`references/skill-arsenal.md`** — consult it and keep it growing as skills are added. Only name skills that are actually installed on the current machine.
 
 ## Waiting and errors

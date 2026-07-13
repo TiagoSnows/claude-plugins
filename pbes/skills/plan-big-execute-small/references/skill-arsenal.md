@@ -14,14 +14,18 @@ Almost every skill below ships in the sibling **`tiago-skills`** plugin (same `t
 
 These are a **personal, adapted ecosystem** — many started as third-party skills (mostly MIT) and were tweaked; they may not behave identically to their originals. A few large packs are NOT bundled and stay as external installs (marked *(external)* below).
 
-## Degrade gracefully — the map is optional
+## Missing skill → WARN, never silently degrade
 
-Every skill is an **enhancement, not a dependency**. If `tiago-skills` isn't installed, the pattern (plan → delegate → verify → synthesize) still works with zero skills.
+Every skill is an **enhancement, not a dependency**. If `tiago-skills` isn't installed, the pattern (plan → delegate → verify → synthesize) still works. But a skill you *wanted* and couldn't use is never swallowed silently — you tell the user.
 
 1. **Check before naming.** Before putting a skill in a worker brief, confirm it appears in the session's available-skills list. Never name one you haven't seen listed.
-2. **Absent skill → proceed without it.** The worker does the sub-task with its own judgment.
-3. **Optionally suggest the install** (command above) and continue meanwhile. **Never install autonomously** — always the user's explicit call.
-4. A worker briefed with an unavailable skill must say so in its report, not fail silently.
+2. **Absent skill → surface it, don't hide it.** When a skill that would have improved the sub-task is missing, emit an explicit warning to the user: which skill, what it would have done better here, and the exact install command (see table above). Do this the moment you notice — not buried in the final synthesis.
+
+   > ⚠️ Skill `tdd` not installed — did this sub-task without test-first discipline. Install: `/plugin install tiago-skills@tiago-plugins`.
+
+3. **Then proceed** with the worker's own judgment so the task still completes. Warning first, work second — never work-only.
+4. **Never install autonomously** — the warning names the command; running it is always the user's explicit call.
+5. A worker briefed with an unavailable skill must report that fact back so you can raise the warning; it must not fail silently or pretend it used the skill.
 
 ## Coordinator-level (you, the main loop — invoke these yourself)
 These plan, interrogate, or fan out. Run them in the main loop; do NOT push them into a worker (several spawn their own agents, and workers can't nest). All in `tiago-skills` unless marked.
