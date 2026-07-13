@@ -1,0 +1,8 @@
+{
+  "name": "pbes",
+  "version": "1.0.0",
+  "description": "Plan Big, Execute Small — coordenador frontier + workers Sonnet baratos. Skill de coordenação + agents pbes-reader (read-only) e pbes-editor (write).",
+  "author": {
+    "name": "Tiago Neves"
+  }
+}
