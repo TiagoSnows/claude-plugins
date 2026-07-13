@@ -1,5 +1,3 @@
-# tiago-plugins
-
 Marketplace pessoal de plugins para Claude Code.
 
 ## Plugins
