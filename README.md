@@ -25,13 +25,9 @@ Padrão de orquestração baseado no cookbook da Anthropic: o modelo frontier (l
 
 ### tiago-skills — coleção de skills
 
-~50 skills: design (`impeccable`, `design-taste-frontend`, `minimalist-ui`…), testing (`tdd`, `test-fixing`, `pict-test-designer`), debugging (`diagnosing-bugs`), planejamento (`grilling`, `wayfinder`, `to-spec`), RE/security (`04-reverse-engineering`, `08-network-security`, `ffuf-skill`), DB (`postgres`), e mais.
+~95 skills: design (`impeccable`, `design-taste-frontend`, `minimalist-ui`…), testing (`tdd`, `test-fixing`, `pict-test-designer`), debugging (`diagnosing-bugs`), planejamento (`grilling`, `wayfinder`, `to-spec`), RE/security (`04-reverse-engineering`, `08-network-security`, `ffuf-skill`), DB (`postgres`), marketing (44 skills — `copywriting`, `ads`, `cro`, `seo-audit`…), code-quality (`karpathy-guidelines`), e mais.
 
-**Ecossistema próprio adaptado** — muitas nasceram como skills de terceiros (majoritariamente MIT) e foram ajustadas; **podem não se comportar 100% igual às originais**. Direitos de cada skill de terceiros pertencem aos autores originais sob suas licenças.
-
-**Não incluído** (instala à parte, packs grandes):
-- `marketing-skills:*` (44 skills) → `/plugin marketplace add coreyhaines31/marketingskills`
-- `karpathy-guidelines` → `/plugin marketplace add forrestchang/andrej-karpathy-skills`
+**Ecossistema próprio adaptado** — muitas nasceram como skills de terceiros (majoritariamente MIT) e foram ajustadas; **podem não se comportar 100% igual às originais**. Atribuição e licenças de terceiros em [`tiago-skills/NOTICE.md`](tiago-skills/NOTICE.md); direitos de cada skill pertencem aos autores originais.
 
 **Skills com dependência de tool de sistema** (guidance-only até instalar — nunca auto-instala):
 - `playwright-skill` → `node_modules` NÃO vai no repo; rode `npm install` + `npx playwright install chromium`

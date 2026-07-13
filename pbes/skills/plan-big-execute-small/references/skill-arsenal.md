@@ -56,7 +56,7 @@ Must not fan out. Flag `[tool]` = needs a system tool installed to actually run 
 | `pict-test-designer` | Combinatorial (pairwise) test-case design. | `[tool]` PICT / `pypict` |
 | `ffuf-skill` | Web fuzzing / pentest — **authorized targets only**. | `[tool]` `ffuf` binary |
 | `impeccable` / `design-taste-frontend` / `high-end-visual-design` / `minimalist-ui` / `industrial-brutalist-ui` / `gpt-taste` | Frontend/UI design & polish. | — |
-| `karpathy-guidelines` *(external — forrestchang/andrej-karpathy-skills)* | General code-quality discipline on any edit. | — |
+| `karpathy-guidelines` | General code-quality discipline on any edit. | — |
 
 ## Reader-worker-loadable (name in a reader-worker brief)
 | Skill | Load it for | Deps |
@@ -72,9 +72,9 @@ Must not fan out. Flag `[tool]` = needs a system tool installed to actually run 
 
 A reader worker can load these for pure static, Read-only analysis; use the editor worker when the task runs tools via Bash.
 
-## Marketing / Growth *(external — coreyhaines31/marketingskills)*
+## Marketing / Growth (bundled in `tiago-skills`)
 
-The 44-skill `marketing-skills:*` pack is NOT bundled in `tiago-skills`. Install separately: `/plugin marketplace add coreyhaines31/marketingskills`. Prefix every name with `marketing-skills:`. Editor-worker for copy/pages/config; coordinator for strategy.
+The 44-skill marketing pack ships inside `tiago-skills` (MIT © Corey Haines — see `NOTICE.md`). Editor-worker for copy/pages/config; coordinator for strategy. Names may resolve as bare (`copywriting`) or namespaced depending on install — check the available-skills list.
 
 - **Copy & content:** `copywriting` · `copy-editing` · `content-strategy` · `marketing-ideas` · `social` · `video` · `image`
 - **Landing / conversion:** `cro` · `popups` · `paywalls` · `signup` · `onboarding` · `lead-magnets` · `free-tools` · `pricing`
