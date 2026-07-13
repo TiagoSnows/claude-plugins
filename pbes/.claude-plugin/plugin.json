@@ -1,7 +1,7 @@
 {
   "name": "pbes",
-  "version": "1.0.0",
-  "description": "Plan Big, Execute Small — coordenador frontier + workers Sonnet baratos. Skill de coordenação + agents pbes-reader (read-only) e pbes-editor (write).",
+  "version": "2.0.0",
+  "description": "Plan Big, Execute Small — coordenador frontier + workers Sonnet (pbes-reader/pbes-editor) com ~95 skills embutidas que os workers carregam sob demanda. Skills de terceiros sob suas licenças (ver NOTICE.md).",
   "author": {
     "name": "Tiago Neves"
   }

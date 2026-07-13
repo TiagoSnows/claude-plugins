@@ -5,13 +5,13 @@
   },
   "metadata": {
     "description": "Plugins pessoais do Tiago para Claude Code",
-    "version": "1.0.0"
+    "version": "2.0.0"
   },
   "plugins": [
     {
       "name": "pbes",
       "source": "./pbes",
-      "description": "Plan Big, Execute Small — coordenador frontier que planeja e delega para workers Sonnet baratos (pbes-reader / pbes-editor), verifica e sintetiza sem ler conteúdo bruto.",
+      "description": "Plan Big, Execute Small — coordenador frontier + agents Sonnet (pbes-reader/pbes-editor) com arsenal de ~95 skills embutido (design, testing, debugging, planning, marketing, RE/security, DB). O coordenador delega e os workers carregam as skills do próprio plugin.",
       "author": {
         "name": "Tiago Neves"
       },
@@ -20,22 +20,10 @@
         "subagents",
         "coordinator",
         "plan-big-execute-small",
-        "token-efficiency"
-      ]
-    },
-    {
-      "name": "tiago-skills",
-      "source": "./tiago-skills",
-      "description": "Coleção de skills do Tiago — design, testing, debugging, marketing, RE/security, prospecção. Ecossistema próprio adaptado; pode divergir das skills originais.",
-      "author": {
-        "name": "Tiago Neves"
-      },
-      "keywords": [
         "skills",
         "design",
         "testing",
-        "marketing",
-        "debugging"
+        "marketing"
       ]
     }
   ]
