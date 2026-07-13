@@ -1,0 +1,7 @@
+node_modules/
+connections.json
+.env
+*.pem
+*.key
+.temp-execution-*.js
+*.log

@@ -2,8 +2,29 @@
 
 The Coordinator consults this to "tune" itself and its workers: reach for the right installed skill at the right moment. **Extensible** — append rows as new skills are installed. A skill you name in a worker brief is loaded by that worker via its `Skill` tool.
 
+## Where these skills live
+
+Almost every skill below ships in the sibling **`tiago-skills`** plugin (same `tiago-plugins` marketplace as this one). Install both together:
+
+```
+/plugin marketplace add TiagoSnows/claude-plugins
+/plugin install pbes@tiago-plugins
+/plugin install tiago-skills@tiago-plugins
+```
+
+These are a **personal, adapted ecosystem** — many started as third-party skills (mostly MIT) and were tweaked; they may not behave identically to their originals. A few large packs are NOT bundled and stay as external installs (marked *(external)* below).
+
+## Degrade gracefully — the map is optional
+
+Every skill is an **enhancement, not a dependency**. If `tiago-skills` isn't installed, the pattern (plan → delegate → verify → synthesize) still works with zero skills.
+
+1. **Check before naming.** Before putting a skill in a worker brief, confirm it appears in the session's available-skills list. Never name one you haven't seen listed.
+2. **Absent skill → proceed without it.** The worker does the sub-task with its own judgment.
+3. **Optionally suggest the install** (command above) and continue meanwhile. **Never install autonomously** — always the user's explicit call.
+4. A worker briefed with an unavailable skill must say so in its report, not fail silently.
+
 ## Coordinator-level (you, the main loop — invoke these yourself)
-These plan, interrogate, or fan out. Run them in the main loop; do NOT push them into a worker (several spawn their own agents, and workers can't nest).
+These plan, interrogate, or fan out. Run them in the main loop; do NOT push them into a worker (several spawn their own agents, and workers can't nest). All in `tiago-skills` unless marked.
 
 | Skill | Reach for it when |
 |---|---|
@@ -13,43 +34,43 @@ These plan, interrogate, or fan out. Run them in the main loop; do NOT push them
 | `wayfinder` | Planning large work as investigation tickets on an issue tracker. |
 | `to-spec` / `to-tickets` | Turning a settled plan into a spec, then into tracer-bullet tickets. |
 | `triage` | Moving issues through a triage state machine. |
-| `handoff` | Compacting the session into a faithful handoff doc (use this instead of hand-writing resume notes — it avoids inflated handoffs). |
-| `research` / `deep-research` | Multi-source investigation that itself fans out (coordinator territory). |
+| `handoff` | Compacting the session into a faithful handoff doc (avoids inflated handoffs). |
+| `research` | Multi-source investigation that itself fans out (coordinator territory). |
 | `code-review` | Two-axis (standards + spec) review that spawns its own sub-agents. |
-| `security-review` | Reviewing a diff for vulnerabilities before merge. |
+| `security-review` (built-in) | Reviewing a diff for vulnerabilities before merge. |
 
-## Editor-worker-loadable (name in a `pbes-editor` brief)
+## Editor-worker-loadable (name in an editor-worker brief)
 Must not fan out. Flag `[tool]` = needs a system tool installed to actually run (see below).
 
 | Skill | Load it for | Deps |
 |---|---|---|
 | `tdd` | Implement a feature/bugfix test-first (red-green-refactor). | — |
 | `test-fixing` | A suite has failing tests — group, patch, re-run. | — |
-| `diagnosing-bugs` / `systematic-debugging` | Debug a failure; `systematic-debugging` bundles the root-cause-tracing technique. | — |
+| `diagnosing-bugs` | Debug a failure; root-cause tracing. | — |
 | `prototype` | Throwaway prototype to answer a design question. | — |
 | `playwright-skill` | Write/run browser E2E tests. | `[tool]` Node + Chromium |
 | `pict-test-designer` | Combinatorial (pairwise) test-case design. | `[tool]` PICT / `pypict` |
 | `ffuf-skill` | Web fuzzing / pentest — **authorized targets only**. | `[tool]` `ffuf` binary |
 | `impeccable` / `design-taste-frontend` / `high-end-visual-design` / `minimalist-ui` / `industrial-brutalist-ui` / `gpt-taste` | Frontend/UI design & polish. | — |
-| `karpathy-guidelines` | General code-quality discipline on any edit. | — |
+| `karpathy-guidelines` *(external — forrestchang/andrej-karpathy-skills)* | General code-quality discipline on any edit. | — |
 
-## Reader-worker-loadable (name in a `pbes-reader` brief)
+## Reader-worker-loadable (name in a reader-worker brief)
 | Skill | Load it for | Deps |
 |---|---|---|
-| `postgres` | Read-only SQL inspection of a Postgres DB. | `[tool]` `pip psycopg2-binary` + `connections.json` |
+| `postgres` | Read-only SQL inspection of a Postgres DB. | `[tool]` `pip psycopg2-binary` + local `connections.json` |
 
-## Security / RE / Network (tool-heavy — usually `pbes-editor`, needs Bash)
+## Security / RE / Network (tool-heavy — usually editor worker, needs Bash)
 
 | Skill | Load it for | Deps |
 |---|---|---|
-| `04-reverse-engineering` | Binary analysis, disassembly, decompilation, firmware & **protocol RE** (Mir4G client, packet cipher, opcode maps). | `[tool]` Ghidra / x64dbg / objdump / Python — per task |
+| `04-reverse-engineering` | Binary analysis, disassembly, decompilation, firmware & protocol RE. | `[tool]` Ghidra / x64dbg / objdump / Python — per task |
 | `08-network-security` | Traffic/PCAP analysis, protocol decode, IDS/IPS rules, firewall & anomaly audit. | `[tool]` tshark / scapy / Python |
 
-A `pbes-reader` can load these for pure static, Read-only analysis; use `pbes-editor` when the task runs tools via Bash. `ffuf-skill` (web pentest, above) is part of this family.
+A reader worker can load these for pure static, Read-only analysis; use the editor worker when the task runs tools via Bash.
 
-## Marketing / Growth (`marketing-skills:*` — editor-worker for copy/pages/config, coordinator for strategy)
+## Marketing / Growth *(external — coreyhaines31/marketingskills)*
 
-Full pack (44). Pick by lane; prefix every name with `marketing-skills:`. The orchestrator decides which fits the request.
+The 44-skill `marketing-skills:*` pack is NOT bundled in `tiago-skills`. Install separately: `/plugin marketplace add coreyhaines31/marketingskills`. Prefix every name with `marketing-skills:`. Editor-worker for copy/pages/config; coordinator for strategy.
 
 - **Copy & content:** `copywriting` · `copy-editing` · `content-strategy` · `marketing-ideas` · `social` · `video` · `image`
 - **Landing / conversion:** `cro` · `popups` · `paywalls` · `signup` · `onboarding` · `lead-magnets` · `free-tools` · `pricing`
@@ -61,13 +82,13 @@ Full pack (44). Pick by lane; prefix every name with `marketing-skills:`. The or
 - **Competitive & PR:** `competitor-profiling` · `competitors` · `public-relations` · `co-marketing`
 - **Analytics:** `analytics`
 
-**Sales-page recipe:** `copywriting` (copy) + a design skill (`impeccable` / `design-taste-frontend`) for the page build + `cro` (conversion) + `marketing-psychology` (persuasion) + `seo-audit` / `schema` (discoverability). Fan these across editor workers; you synthesize the final page.
+**Sales-page recipe:** `copywriting` + a design skill (`impeccable` / `design-taste-frontend`) + `cro` + `marketing-psychology` + `seo-audit` / `schema`. Fan these across editor workers; you synthesize the final page.
 
-## System-tool gate (per user's no-autonomous-install rule)
-These skills are installed as files but stay **guidance-only until the tool is present**. Never auto-install; get explicit user consent first:
-- `playwright-skill` → Node.js + `npm install` + `npx playwright install chromium` (~150MB)
+## System-tool gate (no-autonomous-install rule)
+These skills are files but stay **guidance-only until the tool is present**. Never auto-install; get explicit user consent first:
+- `playwright-skill` → Node.js + `npm install` + `npx playwright install chromium` (~150MB). *(node_modules NOT shipped — run npm install after enabling.)*
 - `pict-test-designer` → Microsoft PICT binary, or `pip install pypict`
-- `postgres` → `pip install psycopg2-binary` + a local `connections.json` (chmod 600)
+- `postgres` → `pip install psycopg2-binary` + a local `connections.json` (copy from `connections.example.json`, chmod 600 — NEVER commit the real one)
 - `ffuf-skill` → `ffuf` Go binary (a real network fuzzer — authorized targets only)
 
 ## How to use in a brief

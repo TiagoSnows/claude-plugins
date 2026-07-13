@@ -22,6 +22,21 @@
         "plan-big-execute-small",
         "token-efficiency"
       ]
+    },
+    {
+      "name": "tiago-skills",
+      "source": "./tiago-skills",
+      "description": "Coleção de skills do Tiago — design, testing, debugging, marketing, RE/security, prospecção. Ecossistema próprio adaptado; pode divergir das skills originais.",
+      "author": {
+        "name": "Tiago Neves"
+      },
+      "keywords": [
+        "skills",
+        "design",
+        "testing",
+        "marketing",
+        "debugging"
+      ]
     }
   ]
 }
