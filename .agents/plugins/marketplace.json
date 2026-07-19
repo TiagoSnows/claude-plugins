@@ -1,0 +1,20 @@
+{
+  "name": "tiago-plugins",
+  "interface": {
+    "displayName": "Tiago Plugins"
+  },
+  "plugins": [
+    {
+      "name": "pbes",
+      "source": {
+        "source": "local",
+        "path": "./plugins/pbes"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

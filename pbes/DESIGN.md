@@ -1,54 +1,73 @@
-# DESIGN — Plan Big, Execute Small (global artifact)
+# DESIGN — Plan Big, Execute Small
 
-Reusable orchestration artifact for Claude Code. Global scope (`~/.claude/`), works across all Claude Code surfaces: CLI, desktop app, web, IDE.
+Reusable orchestration artifact for Codex App and Claude Code.
 
 ## Source
 
-Anthropic cookbook — "Plan Big, Execute Small" (Coordinated Managed Agents):
-https://github.com/anthropics/claude-cookbooks/blob/main/managed_agents/CMA_plan_big_execute_small.ipynb
+The original pattern comes from Anthropic's
+[Plan Big, Execute Small cookbook](https://github.com/anthropics/claude-cookbooks/blob/main/managed_agents/CMA_plan_big_execute_small.ipynb).
+Its reference run reported approximately 2.5× lower cost, 3× higher speed, and
+84% of input tokens at the worker rate. Those numbers describe that Claude
+experiment only; they are not a Codex benchmark.
 
-Frontier coordinator + cheap workers. Coordinator plans/delegates/synthesizes and holds no tools; workers do the token-heavy reading in isolated contexts and report distilled findings back. Reference run: ~2.5× cheaper, ~3× faster, 84% of input tokens at the worker rate.
+## Stable architecture
 
-## Why the coordinator is the main loop, not an agent
+The visible main loop remains the coordinator because it owns requirements,
+decisions, supervision, verification, and the final result. Bounded workers do
+token-heavy reading or surgical edits and return distilled evidence.
 
-The cookbook is written for the **Claude Agent SDK**, where code (`client.beta.agents.create`) instantiates a coordinator agent and worker agents, and the coordinator gets automatic `create_agent` / `send_to_agent` / `wait_for_agents` tools.
+The portable contract is:
 
-Claude Code has no coordinator-that-spawns-coordinators primitive — subagent nesting is blocked. So the coordinator cannot be a subagent (a subagent can't fan out). It must be the **main loop wearing the coordinator persona**, and that persona is delivered by a **Skill** — the same mechanism that lets a persona take over the chat and persist across turns. This is also better for the user: the planning and steering happen in the visible main loop, where the user can intervene, instead of hidden inside an isolated agent.
+1. define the outcome and observable completion criteria;
+2. decompose only independent work;
+3. dispatch one bounded assignment per worker;
+4. wait for every terminal result;
+5. distrust and verify reports;
+6. synthesize only supported claims.
 
-The workers stay as real agents — this half maps 1:1 to the cookbook.
+## Runtime adapters
 
-## SDK → Claude Code mapping
+The coordinator selects an adapter from the tools exposed in the current
+session.
 
-| Cookbook (SDK) | Claude Code |
-|---|---|
-| Coordinator agent (`agents.create`, model=frontier) | Main loop (Fable 5) + `plan-big-execute-small` skill as its system prompt |
-| `create_agent` / `send_to_agent` (dynamic) | `Agent` tool (`model: "sonnet"`, `subagent_type`) + `SendMessage` |
-| Deterministic fan-out + loops | `Workflow` tool (`agent({model:"sonnet", agentType, schema})`, `parallel`/`pipeline`) — requires user opt-in |
-| Worker agents (model=Sonnet), tool-scoped | `pbes-reader` (read-only) / `pbes-editor` (write) subagents |
-| `wait_for_agents` before concluding | await the Agent calls / `parallel()` barrier |
-| Re-assign sub-question to fresh worker on infra error | re-dispatch / `.filter(Boolean)` |
-| Worker `submit_result` (distilled) | worker's final message = distilled findings, ≤~300 tokens |
+| Concern | Codex | Claude Code |
+|---|---|---|
+| Spawn | `spawn_agent` | `Agent` |
+| Refine | `send_message` / `followup_task` | `SendMessage` |
+| Wait | `wait_agent` plus terminal agent state | synchronous return or surfaced background completion |
+| Reader | built-in `explorer` plus explicit no-edit brief | `pbes:pbes-reader` tool-scoped agent |
+| Editor | built-in `worker` with owned files/worktree | `pbes:pbes-editor` tool-scoped agent |
+| Models | capability-first routing from the current schema | packaged Sonnet default unless explicitly overridden |
 
-## Safeguards (from the cookbook, verbatim-distilled)
+The canonical details live in:
 
-1. **Worker least-privilege** — "the blast radius you want": workers read untrusted input; scoping keeps the cheap model out of bash/filesystem. Coordinator holds ~no tools.
-2. **Coordinator never reads raw content** — only distilled summaries.
-3. **Context isolation** — the giant pages/files a worker reads never enter anyone else's context.
-4. **Barrier before conclusion** — always wait for all spawned workers before synthesizing.
-5. **Re-spawn on infra error** — rate limit / timeout → fresh worker, same sub-task.
-6. **Verify** — every load-bearing fact confirmed from ≥2 independent workers/sources; adversarial refute-brief for high-stakes claims.
+- `skills/plan-big-execute-small/references/codex-runtime.md`;
+- `skills/plan-big-execute-small/references/claude-runtime.md`;
+- `skills/plan-big-execute-small/references/model-routing.md`.
 
-Plus one Claude-Code-specific hardening driven by the user's past pain (generic agent rubber-stamping bad worker output): the skill makes distrust-and-verify an explicit, non-optional step, and pins coordinator identity/persistence so the main loop does not silently revert to doing the work itself.
+## Model policy
 
-## Files
+The canonical, capability-first policy lives in
+`skills/plan-big-execute-small/references/model-routing.md`. This document does
+not duplicate its model slugs or effort defaults. Runtime adapters must never
+treat models from different providers as equal in price, latency, quality, or
+context.
 
-```
-~/.claude/skills/plan-big-execute-small/SKILL.md    coordinator doctrine (the persona)
-~/.claude/skills/plan-big-execute-small/DESIGN.md    this file
-~/.claude/agents/pbes-reader.md                      read-only Sonnet worker
-~/.claude/agents/pbes-editor.md                      write-capable Sonnet worker
-```
+## Safety properties
+
+1. Reader assignments prohibit edits and disclose whether that is enforced by
+   tooling or only by instruction.
+2. Concurrent editors receive non-overlapping ownership and isolated
+   worktrees when the filesystem is shared.
+3. Raw logs, captures, and large files stay outside the coordinator context.
+4. No conclusion is drawn while requested workers remain active.
+5. Infrastructure failures are re-dispatched or reported, never smoothed over.
+6. Load-bearing facts receive direct or independent adversarial verification.
 
 ## Invocation
 
-Auto-trigger via the skill `description`, explicit `/plan-big-execute-small`, or natural language ("orchestrate this with workers"). On invoke, the main loop adopts the Coordinator persona and holds it until the task completes.
+- Codex plugin: `$pbes:plan-big-execute-small`
+- Claude plugin: `/pbes:plan-big-execute-small`
+
+Implicit invocation is controlled by the skill description and applicable host
+policy.

@@ -1,7 +1,7 @@
 {
   "name": "pbes",
-  "version": "2.0.0",
-  "description": "Plan Big, Execute Small — coordenador frontier + workers Sonnet (pbes-reader/pbes-editor) com ~95 skills embutidas que os workers carregam sob demanda. Skills de terceiros sob suas licenças (ver NOTICE.md).",
+  "version": "2.1.0",
+  "description": "Plan Big, Execute Small — orquestração verificada para Claude Code, com workers dedicados e ~90 skills embutidas. Skills de terceiros sob suas licenças (ver NOTICE.md).",
   "author": {
     "name": "Tiago Neves"
   }
