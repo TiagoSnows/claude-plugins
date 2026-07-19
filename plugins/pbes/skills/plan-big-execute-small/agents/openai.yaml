@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan Big, Execute Small"
+  short_description: "Coordinate broad work through verified subagents"
+  default_prompt: "Use $pbes:plan-big-execute-small to decompose and coordinate this broad task with verified subagent findings."

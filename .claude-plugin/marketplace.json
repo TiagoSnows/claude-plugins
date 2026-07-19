@@ -4,20 +4,22 @@
     "name": "Tiago Neves"
   },
   "metadata": {
-    "description": "Plugins pessoais do Tiago para Claude Code",
-    "version": "2.0.0"
+    "description": "Plugins pessoais do Tiago para Codex App e Claude Code",
+    "version": "2.1.0"
   },
   "plugins": [
     {
       "name": "pbes",
       "source": "./pbes",
-      "description": "Plan Big, Execute Small — coordenador frontier + agents Sonnet (pbes-reader/pbes-editor) com arsenal de ~95 skills embutido (design, testing, debugging, planning, marketing, RE/security, DB). O coordenador delega e os workers carregam as skills do próprio plugin.",
+      "description": "Plan Big, Execute Small — orquestração verificada e adaptável ao runtime, com agents Claude e suporte nativo ao Codex App, mais um arsenal de ~90 skills.",
       "author": {
         "name": "Tiago Neves"
       },
       "keywords": [
         "orchestration",
         "subagents",
+        "codex",
+        "claude-code",
         "coordinator",
         "plan-big-execute-small",
         "skills",

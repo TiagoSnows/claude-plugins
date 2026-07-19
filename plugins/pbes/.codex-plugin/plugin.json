@@ -1,0 +1,34 @@
+{
+  "name": "pbes",
+  "version": "2.1.0",
+  "description": "Plan Big, Execute Small: verified multi-agent orchestration for Codex with capability-aware model routing.",
+  "author": {
+    "name": "Tiago Neves",
+    "url": "https://github.com/TiagoSnows"
+  },
+  "homepage": "https://github.com/TiagoSnows/claude-plugins",
+  "repository": "https://github.com/TiagoSnows/claude-plugins",
+  "keywords": [
+    "orchestration",
+    "subagents",
+    "codex",
+    "skills"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "PBES",
+    "shortDescription": "Verified orchestration for broad agent work",
+    "longDescription": "Plan broad work, delegate bounded assignments, verify evidence, and synthesize results using Codex collaboration tools and capability-aware model routing.",
+    "developerName": "Tiago Neves",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Use PBES to investigate this project in parallel.",
+      "Use PBES to implement and verify this broad change.",
+      "Use PBES to review this branch with independent agents."
+    ]
+  }
+}

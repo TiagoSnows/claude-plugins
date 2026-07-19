@@ -5,3 +5,5 @@ connections.json
 *.key
 .temp-execution-*.js
 *.log
+__pycache__/
+*.pyc

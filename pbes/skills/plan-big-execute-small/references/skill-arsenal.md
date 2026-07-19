@@ -1,33 +1,52 @@
 # Skill Arsenal — role → skill map (tuning reference)
 
-The Coordinator consults this to "tune" itself and its workers: reach for the right installed skill at the right moment. **Extensible** — append rows as new skills are installed. A skill you name in a worker brief is loaded by that worker via its `Skill` tool.
+The Coordinator consults this to tune itself and its workers: reach for the
+right installed skill at the right moment. **Extensible** — append rows as new
+skills are installed. In Codex, the coordinator personally reads selected
+skills and passes their relevant constraints into briefs. In Claude Code, a
+worker may load a named skill through the `Skill` tool when that tool is
+available.
 
 ## Where these skills live
 
-Every skill below ships **inside this same `pbes` plugin** — same package as this doctrine and the two worker agents. One install brings all of it:
+Every skill below ships **inside the Claude distribution of the `pbes`
+plugin**.
 
-```
+Claude Code:
+
+```text
 /plugin marketplace add TiagoSnows/claude-plugins
 /plugin install pbes@tiago-plugins
 ```
 
-Once installed, the workers (`pbes:pbes-reader` / `pbes:pbes-editor`) load any of these via their `Skill` tool — just name the skill in the worker's brief. These are a **personal, adapted ecosystem**: many started as third-party skills (mostly MIT — see `NOTICE.md`) and were tweaked; they may not behave identically to their originals.
+These are a **personal, adapted ecosystem**: many started as third-party skills
+(mostly MIT — see `NOTICE.md`) and were tweaked; they may not behave identically
+to their originals.
+
+The Codex distribution currently installs the coordinator only and works with
+other skills already exposed in that session. Full arsenal migration is tracked
+in https://github.com/TiagoSnows/claude-plugins/issues/2.
 
 ## Missing skill → WARN, never silently degrade
 
 Every skill is an **enhancement, not a dependency**. If the `pbes` plugin isn't installed on this machine, the pattern (plan → delegate → verify → synthesize) still works. But a skill you *wanted* and couldn't use is never swallowed silently — you tell the user.
 
-1. **Check before naming.** Before putting a skill in a worker brief, confirm it appears in the session's available-skills list. Never name one you haven't seen listed.
+1. **Check before selecting.** Confirm the skill appears in the session's
+   available-skills list. Never claim to use one you have not seen.
 2. **Absent skill → surface it, don't hide it.** When a skill that would have improved the sub-task is missing, emit an explicit warning to the user: which skill, what it would have done better here, and the exact install command (see table above). Do this the moment you notice — not buried in the final synthesis.
 
-   > ⚠️ Skill `tdd` not installed — did this sub-task without test-first discipline. Install: `/plugin install pbes@tiago-plugins`.
+   > ⚠️ Skill `tdd` not installed — this sub-task continued without its
+   > test-first workflow. Install PBES using the command for the active runtime.
 
 3. **Then proceed** with the worker's own judgment so the task still completes. Warning first, work second — never work-only.
 4. **Never install autonomously** — the warning names the command; running it is always the user's explicit call.
-5. A worker briefed with an unavailable skill must report that fact back so you can raise the warning; it must not fail silently or pretend it used the skill.
+5. Never brief a worker as though it loaded an unavailable skill. In Codex,
+   mandatory skill reading remains the coordinator's responsibility.
 
 ## Coordinator-level (you, the main loop — invoke these yourself)
-These plan, interrogate, or fan out. Run them in the main loop; do NOT push them into a worker (several spawn their own agents, and workers can't nest). All bundled in this `pbes` plugin unless marked.
+These plan, interrogate, or fan out. Run them in the main loop; do not push them
+into a worker when nesting is unavailable. All are bundled in this `pbes`
+plugin unless marked.
 
 | Skill | Reach for it when |
 |---|---|
@@ -42,8 +61,11 @@ These plan, interrogate, or fan out. Run them in the main loop; do NOT push them
 | `code-review` | Two-axis (standards + spec) review that spawns its own sub-agents. |
 | `security-review` (built-in) | Reviewing a diff for vulnerabilities before merge. |
 
-## Editor-worker-loadable (name in an editor-worker brief)
-Must not fan out. Flag `[tool]` = needs a system tool installed to actually run (see below).
+## Editor assignment skills
+
+The coordinator selects and reads these before dispatch in Codex. A Claude
+worker may load them directly when its `Skill` tool is available. They must not
+fan out. Flag `[tool]` means a system dependency is required.
 
 | Skill | Load it for | Deps |
 |---|---|---|
@@ -57,7 +79,7 @@ Must not fan out. Flag `[tool]` = needs a system tool installed to actually run 
 | `impeccable` / `design-taste-frontend` / `high-end-visual-design` / `minimalist-ui` / `industrial-brutalist-ui` / `gpt-taste` | Frontend/UI design & polish. | — |
 | `karpathy-guidelines` | General code-quality discipline on any edit. | — |
 
-## Reader-worker-loadable (name in a reader-worker brief)
+## Reader assignment skills
 | Skill | Load it for | Deps |
 |---|---|---|
 | `postgres` | Read-only SQL inspection of a Postgres DB. | `[tool]` `pip psycopg2-binary` + local `connections.json` |
