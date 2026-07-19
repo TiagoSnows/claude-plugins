@@ -1,7 +1,7 @@
 {
   "name": "pbes",
-  "version": "2.1.0",
-  "description": "Plan Big, Execute Small: verified multi-agent orchestration for Codex with capability-aware model routing.",
+  "version": "2.2.0",
+  "description": "Plan Big, Execute Small: verified multi-agent orchestration for Codex with a generated arsenal of approximately 90 skills.",
   "author": {
     "name": "Tiago Neves",
     "url": "https://github.com/TiagoSnows"
@@ -12,13 +12,14 @@
     "orchestration",
     "subagents",
     "codex",
+    "arsenal",
     "skills"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "PBES",
     "shortDescription": "Verified orchestration for broad agent work",
-    "longDescription": "Plan broad work, delegate bounded assignments, verify evidence, and synthesize results using Codex collaboration tools and capability-aware model routing.",
+    "longDescription": "Plan broad work, delegate bounded assignments, verify evidence, and use an arsenal of approximately 90 generated Codex-compatible skills.",
     "developerName": "Tiago Neves",
     "category": "Productivity",
     "capabilities": [

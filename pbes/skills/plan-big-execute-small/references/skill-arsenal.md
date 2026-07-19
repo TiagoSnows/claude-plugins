@@ -9,8 +9,9 @@ available.
 
 ## Where these skills live
 
-Every skill below ships **inside the Claude distribution of the `pbes`
-plugin**.
+Every skill below ships in both `pbes` distributions. `pbes/skills` is the
+canonical Claude source. `plugins/pbes/skills` is its generated Codex-compatible
+projection.
 
 Claude Code:
 
@@ -19,13 +20,20 @@ Claude Code:
 /plugin install pbes@tiago-plugins
 ```
 
+Codex:
+
+```text
+codex plugin marketplace add TiagoSnows/claude-plugins --ref main
+codex plugin add pbes@tiago-plugins
+```
+
 These are a **personal, adapted ecosystem**: many started as third-party skills
 (mostly MIT — see `NOTICE.md`) and were tweaked; they may not behave identically
 to their originals.
 
-The Codex distribution currently installs the coordinator only and works with
-other skills already exposed in that session. Full arsenal migration is tracked
-in https://github.com/TiagoSnows/claude-plugins/issues/2.
+Claude-only invocation metadata remains authoritative in the Claude source. The
+generator records it under `metadata.claude` in the Codex projection because
+Codex does not implement those Claude frontmatter controls.
 
 ## Missing skill → WARN, never silently degrade
 

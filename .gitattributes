@@ -1,0 +1,2 @@
+# The generated mirror preserves canonical Markdown hard breaks and resources.
+plugins/pbes/skills/** whitespace=-trailing-space,-blank-at-eof

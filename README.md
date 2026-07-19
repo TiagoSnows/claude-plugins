@@ -8,11 +8,11 @@ Marketplace público de plugins para Codex App e Claude Code.
 amplos, delega investigações ou edições delimitadas, espera todos os resultados,
 verifica as evidências e só então sintetiza.
 
-O marketplace entrega duas distribuições com o mesmo nome público. O pacote
-Codex contém a coordenadora nativa e trabalha com as skills disponíveis na
-sessão. O pacote Claude preserva aproximadamente 90 skills de design, testes,
-debugging, planejamento, reverse engineering, segurança, banco de dados e
-marketing.
+O marketplace entrega duas distribuições com o mesmo nome público. Ambas
+contêm aproximadamente 90 skills de design, testes, debugging, planejamento,
+reverse engineering, segurança, banco de dados e marketing. A árvore Claude é
+a fonte canônica; a árvore Codex é uma projeção gerada com frontmatter
+compatível com o App.
 
 ### Codex App e CLI
 
@@ -58,7 +58,7 @@ O adaptador Claude preserva os agents `pbes:pbes-reader` e
 
 | Componente | Função |
 |---|---|
-| `plugins/pbes` | Distribuição Codex validada da coordenadora |
+| `plugins/pbes` | Distribuição Codex gerada e validada, com o arsenal completo |
 | `pbes` | Distribuição Claude com agents e arsenal |
 | `plan-big-execute-small` | Doutrina: planejar, delegar, esperar, verificar e sintetizar |
 | `references/codex-runtime.md` | Mapeamento nativo para colaboração no Codex |
@@ -93,9 +93,9 @@ mudança em paralelo. Espere todos os agentes e verifique os achados antes de
 concluir.
 ```
 
-## Arsenal Claude e dependências
+## Arsenal dual-runtime e dependências
 
-O arsenal atualmente distribuído no pacote Claude inclui design
+O arsenal distribuído nos dois pacotes inclui design
 (`impeccable`, `design-taste-frontend`,
 `minimalist-ui`), testes (`tdd`, `test-fixing`, `pict-test-designer`),
 debugging (`diagnosing-bugs`), planejamento (`grilling`, `wayfinder`,
@@ -113,11 +113,13 @@ guidance até a instalação explícita:
 Muitas skills foram adaptadas de projetos de terceiros. Consulte
 [pbes/NOTICE.md](pbes/NOTICE.md) para procedência e licenças.
 
-A distribuição coordenadora e o manifesto Codex passam nos validadores atuais. A
-migração estrita dos metadados Claude-only restantes no arsenal está registrada
-na [issue #2](https://github.com/TiagoSnows/claude-plugins/issues/2); o objetivo
-é preservar o comportamento nas duas plataformas, sem remoção mecânica de
-campos.
+`pbes/skills` permanece intocado como contrato Claude. A geração copia somente
+arquivos rastreados pelo Git, ignora caches e arquivos sensíveis e converte cada
+`SKILL.md` para o contrato Codex. Campos exclusivos do Claude, como
+`disable-model-invocation` e `argument-hint`, são preservados sob
+`metadata.claude` na projeção. O Codex não implementa esses controles de
+invocação; portanto, eles são informativos no pacote Codex e continuam
+funcionais somente no pacote Claude.
 
 ## Desenvolvimento
 
@@ -132,3 +134,20 @@ plugins/pbes/.codex-plugin/plugin.json
 
 Valide a skill e os dois contratos antes de publicar. Não versione credenciais,
 conexões reais, artefatos proprietários ou caches de ferramentas.
+
+A distribuição Codex é determinística e não deve ser editada manualmente:
+
+```powershell
+$env:PYTHONUTF8 = "1"
+python scripts/generate_codex_plugin.py
+python scripts/generate_codex_plugin.py --check
+```
+
+O segundo comando falha se faltar um arquivo, existir um arquivo não gerenciado
+na árvore de skills, a fonte deixar de conter exatamente 90 descritores ou
+houver drift em relação à fonte canônica. Depois da geração, valide as 90 skills
+com `quick_validate.py` e o pacote completo com
+`validate_plugin.py plugins/pbes`.
+
+No Windows, mantenha `PYTHONUTF8=1` também ao chamar os validadores para que a
+leitura das skills não dependa da code page ativa do terminal.
