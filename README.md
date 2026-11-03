@@ -54,6 +54,35 @@ Dentro do Claude Code:
 O adaptador Claude preserva os agents `pbes:pbes-reader` e
 `pbes:pbes-editor`, incluindo suas superfícies distintas de ferramentas.
 
+## Plugin tiago
+
+Plugin enxuto, só para Claude Code, com três skills e nada do arsenal do
+`pbes`:
+
+| Skill | Função |
+|---|---|
+| `tiago:sessao-mestre` | Coordena trabalho amplo a partir de uma sessão mestre no app desktop, abrindo subsessões. Atalho: `/tiago:sm` |
+| `tiago:oraculo` | TDD com oráculo independente: o agente `tiago:test-oracle` escreve os testes, o usuário aprova e os hooks do plugin travam os testes até o check ficar verde |
+| `tiago:flow-manager` | Gera ou refaz arte no Google Flow pelo Chrome do usuário, com quadro de aprovação |
+
+```text
+/plugin marketplace add TiagoSnows/claude-plugins
+/plugin install tiago@tiago-plugins
+```
+
+Dependências:
+
+- `oraculo`: Node.js no `PATH`. Os hooks rodam `node` com `${CLAUDE_PLUGIN_ROOT}`.
+- `flow-manager`: Chrome com a extensão de navegador conectada e logado no
+  Google Flow, mais Python com Pillow, numpy e scipy. O ffmpeg só é necessário para vídeo.
+- `sessao-mestre`: app desktop com subsessões disponíveis. Sem elas, a skill
+  avisa e segue com subagentes.
+
+Não instale este plugin numa máquina que já tenha cópias soltas dessas skills
+em `~/.claude/skills` e os hooks do oráculo no `settings.json`. As skills
+apareceriam duplicadas e os hooks rodariam duas vezes. A `flow-manager`
+também vem no `pbes`. Instale um dos dois plugins, não ambos.
+
 ## Componentes
 
 | Componente | Função |
