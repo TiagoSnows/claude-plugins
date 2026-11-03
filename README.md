@@ -144,8 +144,8 @@ python scripts/generate_codex_plugin.py --check
 ```
 
 O segundo comando falha se faltar um arquivo, existir um arquivo não gerenciado
-na árvore de skills, a fonte deixar de conter exatamente 90 descritores ou
-houver drift em relação à fonte canônica. Depois da geração, valide as 90 skills
+na árvore de skills, a fonte deixar de conter exatamente 91 descritores ou
+houver drift em relação à fonte canônica. Depois da geração, valide as 91 skills
 com `quick_validate.py` e o pacote completo com
 `validate_plugin.py plugins/pbes`.
 
