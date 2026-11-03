@@ -7,8 +7,10 @@ description: Fluxo de TDD com oráculo independente. Um subagente (test-oracle) 
 
 Quem implementa não escreve os testes que julgam o próprio trabalho. Testes gerados depois do código, no mesmo contexto, herdam os bugs dele. Testes escritos da spec em contexto separado e aprovados pelo usuário são o oráculo.
 
-CLI do fluxo (rode no diretório do projeto): `node "${CLAUDE_PLUGIN_ROOT}/hooks/oracle/oracle.mjs" <comando>`
+CLI do fluxo: `node "${CLAUDE_PLUGIN_ROOT}/hooks/oracle/oracle.mjs" <comando> --dir "<raiz do projeto>"`
 Comandos: `status`, `red`, `lock`, `relock`, `unlock`, `restore`, `check`, `init-check "<comando>"`.
+
+Antes do primeiro comando, descubra a raiz do projeto em que vai trabalhar: a pasta do repositório git ou, sem git, a pasta com os arquivos do projeto (README, package.json, pyproject.toml, CLAUDE.md). Passe `--dir` com ela em todos os comandos. Não confie na pasta em que a sessão abriu, que pode só agrupar vários projetos. `red`, `lock` e `init-check` recusam começar dentro de outro fluxo ou numa pasta que só agrupa projetos: leia a mensagem, mostre ao usuário e rode de novo na pasta certa. Use `--force` só se o usuário confirmar que aquela pasta é o projeto.
 
 ## 1. Critérios de aceite
 
