@@ -53,6 +53,10 @@ function gitDirOf(dir) {
 }
 
 const plainStateDir = dir => path.join(dir, '.claude', 'oracle')
+const hasLock = dir => Boolean(statOf(path.join(plainStateDir(dir), 'state.json'))?.isFile())
+
+// Another project inside this one: a folder with its own repository or its own oracle flow.
+const isOtherProject = dir => Boolean(gitDirOf(dir)) || hasLock(dir)
 
 // The project is the nearest enclosing valid git repository (state lives inside .git so it never ends up in a commit)
 // or the nearest folder that already holds an oracle lock. With neither it is `start` itself, so a parent folder is
@@ -63,10 +67,78 @@ export function projectOf(start) {
   for (;;) {
     const gitDir = gitDirOf(dir)
     if (gitDir) return { root: dir, stateDir: path.join(gitDir, 'claude-oracle'), isGit: true }
-    if (statOf(path.join(plainStateDir(dir), 'state.json'))?.isFile()) return { root: dir, stateDir: plainStateDir(dir), isGit: false }
+    if (hasLock(dir)) return { root: dir, stateDir: plainStateDir(dir), isGit: false }
     const parent = path.dirname(dir)
     if (parent === dir) return { root: origin, stateDir: plainStateDir(origin), isGit: false }
     dir = parent
+  }
+}
+
+// Files that make a folder a project of its own even without git (compared in lower case).
+const PROJECT_FILES = new Set(
+  ['README.md', 'CLAUDE.md', 'AGENTS.md', 'package.json', 'pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'Pipfile',
+    'Cargo.toml', 'go.mod', 'pom.xml', 'build.gradle', 'build.gradle.kts', 'composer.json', 'Gemfile', 'deno.json', 'project.godot',
+    'CMakeLists.txt', 'Makefile'].map(name => name.toLowerCase()),
+)
+const PROJECT_FILE = /\.(sln|csproj|fsproj|vbproj)$/i
+export const CODE_FILE =
+  /\.([cm]?[jt]sx?|py|pyi|go|rs|dart|kt|kts|swift|java|scala|rb|php|sql|vue|svelte|c|h|cc|cpp|cxx|hh|hpp|cs|sh|bash|zsh|ps1|psm1|ex|exs|lua)$/i
+
+// A manifest, README or agent file marks a project. With `code`, source files right at the root count too: they make the folder
+// itself a project, but not a subfolder, since src/ and tests/ hold code as well.
+function hasProjectFile(dir, { code = false } = {}) {
+  try {
+    const names = fs.readdirSync(dir)
+    const marks = name => PROJECT_FILES.has(name.toLowerCase()) || PROJECT_FILE.test(name) || (code && CODE_FILE.test(name))
+    return names.some(marks) || hasCheckConfig(dir)
+  } catch {
+    return false
+  }
+}
+
+const hasCheckConfig = dir => Boolean(statOf(path.join(dir, '.claude', 'check.json'))?.isFile())
+
+function subprojectsOf(dir) {
+  let entries
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true })
+  } catch {
+    return []
+  }
+  return entries
+    .filter(entry => entry.isDirectory() && !entry.name.startsWith('.') && !SKIP_DIRS.has(entry.name))
+    .map(entry => path.join(dir, entry.name))
+    .filter(sub => isOtherProject(sub) || hasProjectFile(sub))
+    .map(sub => path.basename(sub))
+}
+
+// red, lock, and init-check start a flow where they run: without git the project is that very folder. They never adopt a
+// parent folder that already has a flow, and they refuse a folder that only groups projects (no project file of its own,
+// subfolders that are projects), which would lock the tests of all of them at once. `force` is for when the user confirms
+// that such a folder really is the project. Returns { project } or { error } with the message for the user.
+export function startProjectOf(start, { force = false } = {}) {
+  const origin = path.resolve(start)
+  const project = projectOf(origin)
+  if (project.isGit) return { project }
+  if (project.root !== origin) {
+    return {
+      error: [
+        `A pasta ${project.root} já tem um fluxo de oráculo ativo, e ${origin} fica dentro dela. Um fluxo não começa dentro de outro.`,
+        `Para continuar aquele fluxo, rode os comandos nele: --dir "${project.root}".`,
+        `Para começar um fluxo só desta pasta, encerre antes o outro: unlock --dir "${project.root}".`,
+      ].join('\n'),
+    }
+  }
+  if (force || hasLock(origin) || hasProjectFile(origin, { code: true })) return { project }
+  const subprojects = subprojectsOf(origin)
+  if (!subprojects.length) return { project }
+  const shown = subprojects.slice(0, 6).join(', ') + (subprojects.length > 6 ? ` e mais ${subprojects.length - 6}` : '')
+  return {
+    error: [
+      `${origin} parece uma pasta que só agrupa projetos: não tem git, arquivo de projeto (README.md, package.json, pyproject.toml, CLAUDE.md...) nem código na raiz, e tem subpastas que são projetos (${shown}).`,
+      'Começar aqui travaria os testes de todos eles de uma vez. Rode o comando na pasta do projeto ou passe --dir "<pasta do projeto>".',
+      'Se esta pasta é mesmo o projeto, confirme com o usuário e use --force.',
+    ].join('\n'),
   }
 }
 
@@ -115,14 +187,14 @@ const SKIP_DIRS = new Set(['node_modules', '.git', '.venv', 'venv', 'dist', 'bui
 // the oracle's own state outside git, whose snapshot holds copies of the locked tests.
 const OWN_TREES = /(^|\/)\.claude\/(worktrees|oracle)(\/|$)/
 
-// Nested repositories are other projects too, so their tests are not part of this project's lock.
+// Nested repositories and folders with their own flow are other projects too, so their tests are not part of this lock.
 function walk(root, dir = '', out = []) {
   if (out.length > 20000) return out
   for (const entry of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
     if (SKIP_DIRS.has(entry.name)) continue
     const rel = dir ? `${dir}/${entry.name}` : entry.name
     if (!entry.isDirectory()) out.push(rel)
-    else if (!OWN_TREES.test(rel) && !gitDirOf(path.join(root, rel))) walk(root, rel, out)
+    else if (!OWN_TREES.test(rel) && !isOtherProject(path.join(root, rel))) walk(root, rel, out)
   }
   return out
 }
@@ -259,16 +331,6 @@ export function summarizeFailures(output) {
 // oracle's state outside git, which holds last-green.json itself, so saving the seal would change the fingerprint it records.
 const UNSTAMPED_TREES = /(^|\/)\.claude\/(worktrees|oracle)(\/|$)/
 
-// Another project: a folder with its own repository. A .git leftover that holds no HEAD is not one.
-function hasOwnRepo(dir) {
-  const dotGit = path.join(dir, '.git')
-  try {
-    return fs.statSync(dotGit).isFile() || fs.statSync(path.join(dotGit, 'HEAD')).isFile()
-  } catch {
-    return false
-  }
-}
-
 // "path:size:mtime" of every file of a project that is not in git, with the same exclusions and cap as walk().
 function stampFiles(root, dir = '', out = []) {
   if (out.length > 20000) return out
@@ -282,7 +344,7 @@ function stampFiles(root, dir = '', out = []) {
     if (SKIP_DIRS.has(entry.name)) continue
     const rel = dir ? `${dir}/${entry.name}` : entry.name
     if (entry.isDirectory()) {
-      if (!UNSTAMPED_TREES.test(rel) && !hasOwnRepo(path.join(root, rel))) stampFiles(root, rel, out)
+      if (!UNSTAMPED_TREES.test(rel) && !isOtherProject(path.join(root, rel))) stampFiles(root, rel, out)
       continue
     }
     try {

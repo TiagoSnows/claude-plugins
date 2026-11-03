@@ -1,7 +1,7 @@
 // PostToolUse (Edit|Write): reports newly introduced patterns that make checks pass without exercising behavior.
 // Signatures from Anthropic/Redwood (arXiv 2511.18397) and OpenAI (arXiv 2503.11926) reward-hacking reports.
 import path from 'node:path'
-import { readInput, projectOf, relativeTo, isTestPath } from './lib.mjs'
+import { readInput, projectOf, relativeTo, isTestPath, CODE_FILE } from './lib.mjs'
 
 const TEST_ONLY = [
   [/\bsys\.exit\s*\(|\bos\._exit\s*\(|\bprocess\.exit\s*\(/g, 'saída do processo dentro do teste (sys.exit/os._exit/process.exit)'],
@@ -18,15 +18,12 @@ const ANYWHERE = [
   [/\bas\s+any\b|\bas\s+unknown\s+as\b/g, 'cast forçado (as any / as unknown as)'],
 ]
 
-// Only code: docs and rules that mention these patterns (e.g. "never use @ts-ignore") are not edits that bypass checks.
-const CODE_FILE =
-  /\.([cm]?[jt]sx?|py|pyi|go|rs|dart|kt|kts|swift|java|scala|rb|php|sql|vue|svelte|c|h|cc|cpp|cxx|hh|hpp|cs|sh|bash|zsh|ps1|psm1|ex|exs|lua)$/i
-
 const count = (text, pattern) => (text.match(pattern) ?? []).length
 
 try {
   const input = await readInput()
   const toolInput = input.tool_input ?? {}
+  // Only code: docs and rules that mention these patterns (e.g. "never use @ts-ignore") are not edits that bypass checks.
   if (!toolInput.file_path || !CODE_FILE.test(toolInput.file_path)) process.exit(0)
 
   const before = input.tool_name === 'Edit' ? toolInput.old_string ?? '' : ''

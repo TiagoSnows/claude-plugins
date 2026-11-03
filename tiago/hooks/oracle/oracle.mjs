@@ -1,9 +1,11 @@
 // CLI for the oracle workflow. Run from the project directory (or pass --dir <path>).
 //   status | red | lock | relock | unlock | restore | check | init-check "<command>" [--shell bash|powershell|cmd] [--timeout <sec>]
+//   red, lock, and init-check also take --force, to start in a folder that looks like it only groups projects.
 import fs from 'node:fs'
 import path from 'node:path'
 import {
   projectOf,
+  startProjectOf,
   readState,
   writeState,
   clearState,
@@ -21,11 +23,23 @@ const option = name => {
   const i = args.indexOf(name)
   return i >= 0 ? args.splice(i, 2)[1] : undefined
 }
+const flag = name => {
+  const i = args.indexOf(name)
+  if (i >= 0) args.splice(i, 1)
+  return i >= 0
+}
 const dir = option('--dir') ?? process.cwd()
 const shell = option('--shell')
 const timeout = option('--timeout')
+const force = flag('--force')
 const [command, ...rest] = args
-const project = projectOf(dir)
+// Commands that start a flow never adopt a parent folder; the others find the flow they continue by walking up.
+const start = ['red', 'lock', 'init-check'].includes(command) ? startProjectOf(dir, { force }) : null
+if (start?.error) {
+  console.log(start.error)
+  process.exit(1)
+}
+const project = start?.project ?? projectOf(dir)
 
 function lock() {
   const { files, embedded } = takeSnapshot(project)

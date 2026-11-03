@@ -113,6 +113,7 @@ describe('worktreeFingerprint outside git', () => {
   it('is not changed by a nested repository, which is another project', () => {
     const project = plainProject()
     write(project.root, 'vendor/other/.git/HEAD', 'ref: refs/heads/main\n')
+    write(project.root, 'vendor/other/.git/refs/heads/main', '')
     write(project.root, 'vendor/other/index.js', 'export {}\n')
     const before = worktreeFingerprint(project)
     write(project.root, 'vendor/other/index.js', 'export const changed = true\n')
