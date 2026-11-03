@@ -49,7 +49,7 @@ SECRET_PATTERNS = (
     re.compile(rb"gh[pousr]_[A-Za-z0-9]{30,}"),
     re.compile(rb"xox[baprs]-[A-Za-z0-9-]{20,}"),
 )
-EXPECTED_SKILL_COUNT = 90
+EXPECTED_SKILL_COUNT = 91
 
 
 def is_safe_source(path: PurePosixPath) -> bool:

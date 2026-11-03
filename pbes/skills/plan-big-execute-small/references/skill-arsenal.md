@@ -68,6 +68,7 @@ plugin unless marked.
 | `research` | Multi-source investigation that itself fans out (coordinator territory). |
 | `code-review` | Two-axis (standards + spec) review that spawns its own sub-agents. |
 | `security-review` (built-in) | Reviewing a diff for vulnerabilities before merge. |
+| `flow-manager` | Generating or redoing art (icons, sprites, illustrations, short video) in Google Flow through the user's Chrome: the main loop writes the brief, a background art agent drives Flow, the user approves review boards. Needs the browser extension connected to a Chrome signed into Flow, and Python with Pillow, numpy and scipy. |
 
 ## Editor assignment skills
 

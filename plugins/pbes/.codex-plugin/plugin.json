@@ -1,6 +1,6 @@
 {
   "name": "pbes",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Plan Big, Execute Small: verified multi-agent orchestration for Codex with a generated arsenal of approximately 90 skills.",
   "author": {
     "name": "Tiago Neves",
