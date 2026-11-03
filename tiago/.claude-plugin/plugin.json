@@ -1,0 +1,18 @@
+{
+  "name": "tiago",
+  "version": "1.0.0",
+  "description": "Três skills de trabalho: sessao-mestre (coordena subsessões no app desktop, com o atalho sm), oraculo (TDD com testes escritos por um agente independente e travados por hooks) e flow-manager (arte no Google Flow pelo Chrome, com quadro de aprovação).",
+  "author": {
+    "name": "Tiago Neves",
+    "url": "https://github.com/TiagoSnows"
+  },
+  "homepage": "https://github.com/TiagoSnows/claude-plugins",
+  "repository": "https://github.com/TiagoSnows/claude-plugins",
+  "keywords": [
+    "sessoes",
+    "tdd",
+    "oraculo",
+    "google-flow",
+    "arte"
+  ]
+}

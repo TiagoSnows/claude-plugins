@@ -5,7 +5,7 @@
   },
   "metadata": {
     "description": "Plugins pessoais do Tiago para Codex App e Claude Code",
-    "version": "2.3.0"
+    "version": "2.4.0"
   },
   "plugins": [
     {
@@ -26,6 +26,20 @@
         "design",
         "testing",
         "marketing"
+      ]
+    },
+    {
+      "name": "tiago",
+      "source": "./tiago",
+      "description": "Só três skills, sem o arsenal do pbes: sessao-mestre (com o atalho sm), oraculo (com o agente test-oracle e os hooks que travam os testes) e flow-manager.",
+      "author": {
+        "name": "Tiago Neves"
+      },
+      "keywords": [
+        "claude-code",
+        "sessoes",
+        "tdd",
+        "google-flow"
       ]
     }
   ]
