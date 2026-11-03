@@ -193,6 +193,31 @@ export function readCheckConfig(project) {
   return config?.command ? config : null
 }
 
+// Where Git for Windows keeps bash.exe, relative to its install folder.
+const GIT_BASH = [path.join('usr', 'bin', 'bash.exe'), path.join('bin', 'bash.exe')]
+
+// On Windows a bare `bash` resolves to the WSL launcher in System32, which fails ("execvpe(/bin/bash) failed") when no
+// distro is installed, and Git Bash is rarely on PATH. Look in the usual install folders and next to the git.exe on PATH.
+function findGitBash() {
+  const installs = ['ProgramFiles', 'ProgramW6432', 'ProgramFiles(x86)']
+    .map(name => process.env[name])
+    .filter(Boolean)
+    .map(dir => path.join(dir, 'Git'))
+  if (process.env.LOCALAPPDATA) installs.push(path.join(process.env.LOCALAPPDATA, 'Programs', 'Git'))
+  for (const dir of (process.env.PATH ?? '').split(path.delimiter)) {
+    if (dir && fs.existsSync(path.join(dir, 'git.exe'))) installs.push(path.resolve(dir, '..'), path.resolve(dir, '..', '..'))
+  }
+  for (const install of installs) {
+    for (const rel of GIT_BASH) if (fs.existsSync(path.join(install, rel))) return path.join(install, rel)
+  }
+  return null
+}
+
+// "shell" in .claude/check.json: "bash" (Git Bash on Windows) or the full path of a bash/sh/zsh executable, used as is.
+const isBashShell = shell =>
+  typeof shell === 'string' && (shell === 'bash' || (path.isAbsolute(shell) && /^(ba|z)?sh(\.exe)?$/i.test(path.basename(shell))))
+const bashFor = shell => (shell !== 'bash' ? shell : process.platform === 'win32' ? findGitBash() : 'bash')
+
 export function runCheck(project, config) {
   const options = {
     cwd: project.root,
@@ -203,8 +228,12 @@ export function runCheck(project, config) {
   }
   let result
   if (config.shell === 'powershell') result = spawnSync('powershell', ['-NoProfile', '-Command', config.command], options)
-  else if (config.shell === 'bash') result = spawnSync('bash', ['-lc', config.command], options)
-  else result = spawnSync(config.command, { ...options, shell: true })
+  else if (isBashShell(config.shell)) {
+    const bash = bashFor(config.shell)
+    result = bash
+      ? spawnSync(bash, ['-lc', config.command], options)
+      : { status: null, error: new Error('Git Bash não encontrado. Instale o Git for Windows ou ponha o caminho completo do bash.exe em "shell" no .claude/check.json.') }
+  } else result = spawnSync(config.command, { ...options, shell: true })
   const output = `${result.stdout ?? ''}${result.stderr ?? ''}${result.error ? `\n${result.error.message}` : ''}`
   return { ok: result.status === 0, code: result.status, output }
 }
