@@ -255,9 +255,53 @@ export function summarizeFailures(output) {
   return [...picked.map(i => lines[i]), ...(tail.length ? ['[...]', ...tail] : [])].join('\n').slice(0, 6000)
 }
 
-// Changes since HEAD; null when the tree is clean (nothing for the gate to verify).
+// Never part of the fingerprint: linked worktrees kept under .claude/worktrees (each one is a project of its own) and the
+// oracle's state outside git, which holds last-green.json itself, so saving the seal would change the fingerprint it records.
+const UNSTAMPED_TREES = /(^|\/)\.claude\/(worktrees|oracle)(\/|$)/
+
+// Another project: a folder with its own repository. A .git leftover that holds no HEAD is not one.
+function hasOwnRepo(dir) {
+  const dotGit = path.join(dir, '.git')
+  try {
+    return fs.statSync(dotGit).isFile() || fs.statSync(path.join(dotGit, 'HEAD')).isFile()
+  } catch {
+    return false
+  }
+}
+
+// "path:size:mtime" of every file of a project that is not in git, with the same exclusions and cap as walk().
+function stampFiles(root, dir = '', out = []) {
+  if (out.length > 20000) return out
+  let entries
+  try {
+    entries = fs.readdirSync(path.join(root, dir), { withFileTypes: true })
+  } catch {
+    return out
+  }
+  for (const entry of entries) {
+    if (SKIP_DIRS.has(entry.name)) continue
+    const rel = dir ? `${dir}/${entry.name}` : entry.name
+    if (entry.isDirectory()) {
+      if (!UNSTAMPED_TREES.test(rel) && !hasOwnRepo(path.join(root, rel))) stampFiles(root, rel, out)
+      continue
+    }
+    try {
+      const stat = fs.lstatSync(path.join(root, rel))
+      out.push(`${rel}:${stat.size}:${stat.mtimeMs}`)
+    } catch {
+      // the file vanished while walking
+    }
+  }
+  return out
+}
+
+// Changes since HEAD; null when the tree is clean (nothing for the gate to verify). Without git there is no HEAD to compare
+// with, so the fingerprint follows the files themselves (path, size, mtime) and changes as soon as the project does.
 export function worktreeFingerprint(project) {
-  if (!project.isGit) return 'no-git'
+  if (!project.isGit) {
+    const stamps = stampFiles(project.root).sort()
+    return stamps.length ? sha256(stamps.join('\n')) : null
+  }
   const git = args => spawnSync('git', ['-C', project.root, ...args], { encoding: 'utf8', maxBuffer: MAX_BUFFER })
   const status = git(['status', '--porcelain=v1', '-z', '--untracked-files=all'])
   if (status.status !== 0 || !status.stdout) return null
