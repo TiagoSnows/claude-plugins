@@ -25,28 +25,49 @@ export async function readInput() {
 
 export const sha256 = data => crypto.createHash('sha256').update(data).digest('hex')
 
-// Finds .git walking up from `start`; in a worktree .git is a file containing "gitdir: <path>".
-function findGit(start) {
-  let dir = path.resolve(start)
-  for (;;) {
-    const dotGit = path.join(dir, '.git')
-    if (fs.existsSync(dotGit)) {
-      if (fs.statSync(dotGit).isDirectory()) return { root: dir, gitDir: dotGit }
-      const match = fs.readFileSync(dotGit, 'utf8').match(/^gitdir:\s*(.+?)\s*$/m)
-      if (match) return { root: dir, gitDir: path.resolve(dir, match[1]) }
-    }
-    const parent = path.dirname(dir)
-    if (parent === dir) return null
-    dir = parent
+const statOf = target => {
+  try {
+    return fs.statSync(target)
+  } catch {
+    return null
   }
 }
 
-// State lives inside .git so it never ends up in a commit.
+// A real .git directory has HEAD plus objects/ or refs/; a leftover with only info/ or claude-oracle/ is not a repository.
+const isGitDir = dir =>
+  statOf(path.join(dir, 'HEAD'))?.isFile() && (statOf(path.join(dir, 'objects'))?.isDirectory() || statOf(path.join(dir, 'refs'))?.isDirectory())
+
+// The git directory of the repository rooted at `dir`, or null. In a worktree .git is a file containing "gitdir: <path>".
+function gitDirOf(dir) {
+  const dotGit = path.join(dir, '.git')
+  const stat = statOf(dotGit)
+  if (stat?.isDirectory()) return isGitDir(dotGit) ? dotGit : null
+  if (!stat?.isFile()) return null
+  try {
+    const match = fs.readFileSync(dotGit, 'utf8').match(/^gitdir:\s*(.+?)\s*$/m)
+    const gitDir = match && path.resolve(dir, match[1])
+    return gitDir && statOf(gitDir)?.isDirectory() ? gitDir : null
+  } catch {
+    return null
+  }
+}
+
+const plainStateDir = dir => path.join(dir, '.claude', 'oracle')
+
+// The project is the nearest enclosing valid git repository (state lives inside .git so it never ends up in a commit)
+// or the nearest folder that already holds an oracle lock. With neither it is `start` itself, so a parent folder is
+// never adopted just because it sits above the project or has a stray .git.
 export function projectOf(start) {
-  const git = findGit(start)
-  if (git) return { root: git.root, stateDir: path.join(git.gitDir, 'claude-oracle'), isGit: true }
-  const root = path.resolve(start)
-  return { root, stateDir: path.join(root, '.claude', 'oracle'), isGit: false }
+  const origin = path.resolve(start)
+  let dir = origin
+  for (;;) {
+    const gitDir = gitDirOf(dir)
+    if (gitDir) return { root: dir, stateDir: path.join(gitDir, 'claude-oracle'), isGit: true }
+    if (statOf(path.join(plainStateDir(dir), 'state.json'))?.isFile()) return { root: dir, stateDir: plainStateDir(dir), isGit: false }
+    const parent = path.dirname(dir)
+    if (parent === dir) return { root: origin, stateDir: plainStateDir(origin), isGit: false }
+    dir = parent
+  }
 }
 
 const statePath = project => path.join(project.stateDir, 'state.json')
@@ -90,13 +111,18 @@ export function relativeTo(project, file) {
 
 const SKIP_DIRS = new Set(['node_modules', '.git', '.venv', 'venv', 'dist', 'build', '__pycache__', '.next', 'target', '.tox'])
 
+// Never part of a project's tests: linked worktrees kept under .claude/worktrees (each one is a project of its own) and
+// the oracle's own state outside git, whose snapshot holds copies of the locked tests.
+const OWN_TREES = /(^|\/)\.claude\/(worktrees|oracle)(\/|$)/
+
+// Nested repositories are other projects too, so their tests are not part of this project's lock.
 function walk(root, dir = '', out = []) {
   if (out.length > 20000) return out
   for (const entry of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
     if (SKIP_DIRS.has(entry.name)) continue
     const rel = dir ? `${dir}/${entry.name}` : entry.name
-    if (entry.isDirectory()) walk(root, rel, out)
-    else out.push(rel)
+    if (!entry.isDirectory()) out.push(rel)
+    else if (!OWN_TREES.test(rel) && !gitDirOf(path.join(root, rel))) walk(root, rel, out)
   }
   return out
 }
@@ -112,7 +138,11 @@ export function listTestFiles(project) {
   } else {
     files = walk(project.root)
   }
-  return [...new Set(files)].filter(isTestPath).filter(rel => fs.existsSync(path.join(project.root, rel)))
+  // git lists a nested repository as a single "dir/" entry, which is not a file to lock.
+  return [...new Set(files)]
+    .filter(rel => !rel.endsWith('/') && !OWN_TREES.test(rel))
+    .filter(isTestPath)
+    .filter(rel => fs.existsSync(path.join(project.root, rel)))
 }
 
 // Test configuration that lives inside general files (package.json, pyproject.toml).
